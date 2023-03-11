@@ -17,7 +17,7 @@ namespace SnakeGame
     {
         public static bool _inPlay = true;
 
-        public static int _length = 4;
+        public static int _length = 6;
         public static int _score = 0;
 
         public static List<Position> points = new List<Position>();
@@ -54,8 +54,11 @@ namespace SnakeGame
                 Move(_lastKey.Value);
             }
 
-            nextUpdate = DateTime.Now.AddMilliseconds(100 / (_score + 1));
-            
+            if (_score <= 3) { nextUpdate = DateTime.Now.AddMilliseconds(100); }
+            else if (_score > 3 && _score <= 6) { nextUpdate = DateTime.Now.AddMilliseconds(75); }
+            else if (_score > 6 && _score <= 9) { nextUpdate = DateTime.Now.AddMilliseconds(65); }
+            else if (_score > 9) { nextUpdate = DateTime.Now.AddMilliseconds(50); }
+
             return true;
         }
 
@@ -65,12 +68,12 @@ namespace SnakeGame
             
             //score
             Console.SetCursorPosition(Console.WindowWidth - 3, Console.WindowHeight - 1);
-            //Console.Write($"Score: {_score}");
             Console.Write(_score);
 
             foreach (var point in points)
             {
                 Console.SetCursorPosition(point.left, point.top);
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write('O');
             }
 
@@ -95,6 +98,7 @@ namespace SnakeGame
         public static void Move(ConsoleKeyInfo key)
         {
             Position currentPos;
+
             if (points.Count != 0)
                 currentPos = new Position() { left = points.Last().left, top = points.Last().top };
             else
@@ -102,16 +106,16 @@ namespace SnakeGame
 
             switch (key.Key)
             {
-                case ConsoleKey.LeftArrow:
+                case ConsoleKey.A:
                     currentPos.left--;
                     break;
-                case ConsoleKey.RightArrow:
+                case ConsoleKey.D:
                     currentPos.left++;
                     break;
-                case ConsoleKey.UpArrow:
+                case ConsoleKey.W:
                     currentPos.top--;
                     break;
-                case ConsoleKey.DownArrow:
+                case ConsoleKey.S:
                     currentPos.top++;
                     break;
 
