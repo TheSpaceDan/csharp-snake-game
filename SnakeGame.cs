@@ -34,6 +34,7 @@ namespace SnakeGame
             inPlay = false;
             Console.Clear();
             Console.WriteLine("Game Over!");
+            Console.WriteLine("Your Final Score: " + UpdateScreen.score);
             Console.ReadLine();
         }
     }
