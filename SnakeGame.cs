@@ -13,51 +13,60 @@ namespace SnakeGame
         public int top;
     }
 
-    class Program
+    public class MainLoop
     {
-        public static bool _inPlay = true;
-
-        public static int _length = 6;
-        public static int _score = 0;
-
+        
+        public static bool inPlay = true;
         public static List<Position> points = new List<Position>();
 
         static void Main(string[] args)
         {
             Console.CursorVisible = false;
-            DrawScreen();
-            while (_inPlay)
+            UpdateScreen.DrawScreen();
+            while (inPlay)
             {
-                if (AcceptInput() || UpdateGame())
-                    DrawScreen();
+                if (Input.AcceptInput() || UpdateScreen.UpdateGame())
+                    UpdateScreen.DrawScreen();
             }
         }
-
+        public static void GameOver()
+        {
+            inPlay = false;
+            Console.Clear();
+            Console.WriteLine("Game Over!");
+            Console.ReadLine();
+        }
+    }
+     
+    public class UpdateScreen
+    {
+        public static int length = 6;
+        public static int score = 0;
         public static DateTime nextUpdate = DateTime.MinValue;
-        public static Position _foodPosition = null;
-        public static Random _rnd = new Random();
+        public static Position foodPosition = null;
+        public static Random rnd = new Random();
         public static bool UpdateGame()
         {
             if (DateTime.Now < nextUpdate) return false;
 
-            if (_foodPosition == null)
+            if (foodPosition == null)
             {
-                _foodPosition = new Position()
+                foodPosition = new Position()
                 {
-                    left = _rnd.Next(Console.WindowWidth),
-                    top = _rnd.Next(Console.WindowHeight)
+                    left = rnd.Next(Console.WindowWidth),
+                    top = rnd.Next(Console.WindowHeight)
                 };
             }
 
-            if (_lastKey.HasValue)
+            if (Input.lastKey.HasValue)
             {
-                Move(_lastKey.Value);
+                Input.Move(Input.lastKey.Value);
             }
 
-            if (_score <= 3) { nextUpdate = DateTime.Now.AddMilliseconds(100); }
-            else if (_score > 3 && _score <= 6) { nextUpdate = DateTime.Now.AddMilliseconds(75); }
-            else if (_score > 6 && _score <= 9) { nextUpdate = DateTime.Now.AddMilliseconds(65); }
-            else if (_score > 9) { nextUpdate = DateTime.Now.AddMilliseconds(50); }
+            if (score <= 3) { nextUpdate = DateTime.Now.AddMilliseconds(100); }
+            else if (score > 3 && score <= 6) { nextUpdate = DateTime.Now.AddMilliseconds(75); }
+            else if (score > 6 && score <= 9) { nextUpdate = DateTime.Now.AddMilliseconds(65); }
+            else if (score > 9) { nextUpdate = DateTime.Now.AddMilliseconds(50); }
 
             return true;
         }
@@ -65,32 +74,35 @@ namespace SnakeGame
         public static void DrawScreen()
         {
             Console.Clear();
-            
+
             //score
             Console.SetCursorPosition(Console.WindowWidth - 3, Console.WindowHeight - 1);
-            Console.Write(_score);
+            Console.Write(score);
 
-            foreach (var point in points)
+            foreach (var point in MainLoop.points)
             {
                 Console.SetCursorPosition(point.left, point.top);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write('O');
             }
 
-            if (_foodPosition != null)
+            if (foodPosition != null)
             {
-                Console.SetCursorPosition(_foodPosition.left, _foodPosition.top);
+                Console.SetCursorPosition(foodPosition.left, foodPosition.top);
                 Console.Write('*');
             }
         }
-
-        static ConsoleKeyInfo? _lastKey;
+    }
+    
+    class Input
+    {
+        public static ConsoleKeyInfo? lastKey;
         public static bool AcceptInput()
         {
             if (!Console.KeyAvailable)
                 return false;
 
-            _lastKey = Console.ReadKey();
+            lastKey = Console.ReadKey();
 
             return true;
         }
@@ -99,8 +111,8 @@ namespace SnakeGame
         {
             Position currentPos;
 
-            if (points.Count != 0)
-                currentPos = new Position() { left = points.Last().left, top = points.Last().top };
+            if (MainLoop.points.Count != 0)
+                currentPos = new Position() { left = MainLoop.points.Last().left, top = MainLoop.points.Last().top };
             else
                 currentPos = GetStartPosition();
 
@@ -121,42 +133,10 @@ namespace SnakeGame
 
             }
 
-            DetectCollision(currentPos);
+            CollisionDetection.DetectCollision(currentPos);
 
-            points.Add(currentPos);
+            MainLoop.points.Add(currentPos);
             CleanUp();
-        }
-
-        public static void DetectCollision(Position currentPos)
-        {
-            // Check if we're off the screen
-            if (currentPos.top < 0 || currentPos.top > Console.WindowHeight
-                || currentPos.left < 0 || currentPos.left > Console.WindowWidth)
-            {
-                GameOver();
-            }
-
-            // Check if we've crashed into the tail
-            if (points.Any(p => p.left == currentPos.left && p.top == currentPos.top))
-            {
-                GameOver();
-            }
-
-            // Check if we've eaten the food
-            if (_foodPosition.left == currentPos.left && _foodPosition.top == currentPos.top)
-            {
-                _length++;
-                _score++;
-                _foodPosition = null;
-            }
-        }
-
-        public static void GameOver()
-        {
-            _inPlay = false;
-            Console.Clear();
-            Console.WriteLine("Game Over!");
-            Console.ReadLine();
         }
 
         public static Position GetStartPosition()
@@ -170,11 +150,39 @@ namespace SnakeGame
 
         public static void CleanUp()
         {
-            while (points.Count() > _length)
+            while (MainLoop.points.Count() > UpdateScreen.length)
             {
-                points.Remove(points.First());
+                MainLoop.points.Remove(MainLoop.points.First());
             }
         }
+    }
 
+    public class CollisionDetection
+    {
+        MainLoop obj = new MainLoop();
+        public static void DetectCollision(Position currentPos)
+        {
+            
+            // Check if we're off the screen
+            if (currentPos.top < 0 || currentPos.top > Console.WindowHeight
+                || currentPos.left < 0 || currentPos.left > Console.WindowWidth)
+            {
+                MainLoop.GameOver();
+            }
+            
+            // Check if we've crashed into the tail
+            if (MainLoop.points.Any(p => p.left == currentPos.left && p.top == currentPos.top))
+            {
+                MainLoop.GameOver();
+            }
+
+            // Check if we've eaten the food
+            if (UpdateScreen.foodPosition.left == currentPos.left && UpdateScreen.foodPosition.top == currentPos.top)
+            {
+                UpdateScreen.length++;
+                UpdateScreen.score++;
+                UpdateScreen.foodPosition = null;
+            }
+        }
     }
 }
